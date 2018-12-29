@@ -1,7 +1,9 @@
-# MS-Office-File-Analyzer
+# MS Office File Analyzer
 
 ## Status
-- Current version only scans OOXML files 
+- Allows security analysis of all relevant MS Office file types: .docx,.docm,.dotm,.pptx,.pptm,.potm,.xlsx,.xlsm,.xlst,.accdt, .accdb,.one,.msg,.oft,.html,.xls,.doc 
+- Inside OOXML files, the following sub-documents are analyzed: vba, ole, svg, document.xml, slide*.xml
+- More details on the MS Office File Analyzer will be published with a Master Thesis research, which is currently in draft.
 
 ## Background
 The MS Office file analyzer has been created as part of an academic security research project. It is a response to the security flaws found in the research. 
