@@ -8,9 +8,8 @@ SendMode Input
 
 MSOAnalyzer:
 /*
-Pre loads extensions and variables to the MSO File Analyzer. 
+Pre-defined variables
 */
-Progress, b w%A_ScreenWidth% h%A_ScreenHeight%, `n`n Please wait until the files have been analyzed. The analysis takes longer if you are analyzing binary files (doc`, xls`, vba`, ...).`n You should not touch your keyboard or mouse unless the analysis is finished.`n Please do not wonder if notepad is opened and closed several times. It is part of the analysis., `n`n`n`n MS Office File Analyzer ,   ; Progress bar and splash image that covers the screen area until the analysis is finished.
 SuchlisteDateitypen1 = .docx,.docm,.dotm,.pptx,.pptm,.potm,.xlsx,.xlsm,.xlst,.accdt
 SuchlisteDateitypen2 = .accdb,.one,.msg,.oft,.html,.xls,.doc
 SuchlisteLinks = </a>, url(, <use
@@ -66,6 +65,7 @@ While %AnzahlDateien% = 0
 }
 ProzentAdd := 100
 ProzentAdd /= AnzahlDateien
+Progress, b w%A_ScreenWidth% h%A_ScreenHeight%, `n`n Please wait until the files have been analyzed. The analysis takes longer if you are analyzing binary files (doc`, xls`, vba`, ...).`n You should not touch your keyboard or mouse unless the analysis is finished.`n Please do not wonder if notepad is opened and closed several times. It is part of the analysis., `n`n`n`n MS Office File Analyzer ,   ; Progress bar and splash image that covers the screen area until the analysis is finished.
 /*
 Start of the file Analysis.
 */
