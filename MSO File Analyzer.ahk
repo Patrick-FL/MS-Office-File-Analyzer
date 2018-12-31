@@ -10,9 +10,10 @@ MSOAnalyzer:
 /*
 Pre-defined variables
 */
-SuchlisteDateitypen1 = .docx,.docm,.dotm,.pptx,.pptm,.potm,.xlsx,.xlsm,.xlst,.accdt
-SuchlisteDateitypen2 = .accdb,.one,.msg,.oft,.html,.xls,.doc
-SuchlisteLinks = </a>, url(, <use
+SuchlisteDateitypen1 = .pptx,.pptm,.potx,.potm,.ppam,.ppsx,.ppsm,.sldx,.sldm,.docx,.docm,.dotx,.dotm,.docb,.xlsx,.xlsm,.xltx,.xltm,.accdt
+SuchlisteDateitypen2 = .ppt,.pot,.pps,.doc,.dot,.wbk,.xlsb,.xla,.xlam,.xll,.xlw,.xls,.xlt,.xlm,.msg,.one,.accdb,.accde,.accdr,.htm,.html,.mht
+SuchlisteLinks = </a>, url(, <use, <foreignobject 
+SuchlisteMedia =  <video, <audio
 SuchlisteVBA = Document_Open,Document_Close,Workbook_Open,Workbook_Close,App_Presentation,Form_Open
 ScriptDatei := A_ScriptDir "\Findings.txt"
 Startverzeichnis := A_ScriptDir "\Working Folder\"
@@ -234,21 +235,27 @@ Scripts related to the embedded video search inside the "document.xml" for Word 
 */
 
 Binaerwandler: ; Change binary files to normal text files. Simple encoding read and write functions did not produce the desired results and text was only readable for the MSO file analyzer, when it was converted through the clipboard. 
-Run, Notepad "%Textify%"
+Clipboard =  
+Run, Notepad "%Textify%" 
+WinActivate, ahk_class Notepad
 WinWaitActive, ahk_class Notepad
 Sleep 1000
 Send, {Control Down}{a}{Control Up}
-Sleep, 300
+Sleep, 300 
 Send, {Control Down}{c}{Control Up}
-Sleep, 300
+ClipWait 
 Send, {Control Down}{v}{Control Up}
-Sleep, 300
+Sleep, 300 
 Send, {Control Down}{s}{Control Up}
-Sleep, 300
-Send, {Alt Down}{F4}{Alt Up}
-Sleep, 300
+Sleep, 300 
+WinClose, ahk_class Notepad 
+Sleep, 300 
+IfWinExist, ahk_class #32770 
+{ 
+    Send, {Enter} 
+}
 WinWaitClose, ahk_class Notepad
-Sleep, 333
+Clipboard = 
 return
 
 ScriptSuche: ; Search for script tags
@@ -274,12 +281,12 @@ If A_LoopReadLine contains %SuchlisteLinks%
 return
 
 VideoSuche1: ; Search for tags related to videos.
-IfInString, A_LoopReadLine, video
+IfInString, A_LoopReadLine, %SuchlisteMedia%
 {
-    IfNotInString, EinzigartigeNachrichten, video
+    IfNotInString, EinzigartigeNachrichten, media
     {
-        FileAppend, - It contains a video.`n, %ScriptDatei%
-        EinzigartigeNachrichten .= "video"
+        FileAppend, - It contains video or audio.`n, %ScriptDatei%
+        EinzigartigeNachrichten .= "media"
     }
 }
 return

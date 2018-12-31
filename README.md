@@ -15,6 +15,6 @@ It allows an user to put in several files of the MS Office applications PowerPoi
 The application holds no warranty that a scanned file is secure to open and without any security flaw. 
 
 ## Copyright
-The MS Office File Analyzer is published as open source. 
+The MS Office File Analyzer is published under GNU GPLv3. 
 
 Microsoft was not involved in the research or has any stakes in the here published application. I even don't know if they like it.
