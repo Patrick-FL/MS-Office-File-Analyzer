@@ -8,7 +8,7 @@ SendMode Input
 
 MSOAnalyzer:
 /*
-Pre-defined variables
+Pre-defined variables.
 */
 SuchlisteDateitypen1 = .pptx,.pptm,.potx,.potm,.ppam,.ppsx,.ppsm,.sldx,.sldm,.docx,.docm,.dotx,.dotm,.docb,.xlsx,.xlsm,.xltx,.xltm,.accdt
 SuchlisteDateitypen2 = .ppt,.pot,.pps,.doc,.dot,.wbk,.xlsb,.xla,.xlam,.xll,.xlw,.xls,.xlt,.xlm,.msg,.one,.accdb,.accde,.accdr,.htm,.html,.mht
@@ -66,7 +66,7 @@ While %AnzahlDateien% = 0
 }
 ProzentAdd := 100
 ProzentAdd /= AnzahlDateien
-Progress, b w%A_ScreenWidth% h%A_ScreenHeight%, `n`n Please wait until the files have been analyzed. The analysis takes longer if you are analyzing binary files (doc`, xls`, vba`, ...).`n You should not touch your keyboard or mouse unless the analysis is finished.`n Please do not wonder if notepad is opened and closed several times. It is part of the analysis., `n`n`n`n MS Office File Analyzer ,   ; Progress bar and splash image that covers the screen area until the analysis is finished.
+Progress, b w%A_ScreenWidth% h%A_ScreenHeight%, `n`n Please wait until the files have been analyzed. The analysis takes longer if you are analyzing binary files (doc`, xls`, vba`, ...).`n You should not touch your keyboard or mouse unless the analysis is finished.`n Please do not wonder if notepad is opened and closed several times. It is part of the analysis.`n`n`nPress F8 if you want to kill the analyzer., `n`n`n`n MS Office File Analyzer ,   ; Progress bar and splash image that covers the screen area until the analysis is finished.
 /*
 Start of the file Analysis.
 */
@@ -80,6 +80,7 @@ Loop, Files, %Startverzeichnis%*.*, F
     /*
     Prepare files for the analysis according to their file type. The files that can and will be analyzed are put into the analysis folder.
     */
+    FileAppend, `n`n########################################`n %A_LoopFileName%`n, %ScriptDatei%
     If A_LoopFileName contains %SuchlisteDateitypen1%
     {
         FileCopy, %A_LoopFileFullPath%, %UntersuchungsZip%
@@ -91,14 +92,17 @@ Loop, Files, %Startverzeichnis%*.*, F
     {
         FileCopy, %A_LoopFileFullPath%, %AnalysePfad%
     }
-    FileAppend, `n`n########################################`n %A_LoopFileName%`n, %ScriptDatei%
+    Else 
+    {
+        FileAppend, The file type is currently not supported and has therefore not been analyzed., %ScriptDatei%
+    }
     If Fortschritt < 100
     {
         Fortschritt += ProzentAdd
     }
     Progress, %Fortschritt%
     /*
-    Go through all files recursive in the "Working Folder".
+    Go through all files recursive in the "Analysis" folder.
     */
     Loop, Files, %AnalysePfad%\*.*, FR
     {
@@ -106,10 +110,10 @@ Loop, Files, %Startverzeichnis%*.*, F
         FileMove, %A_LoopFileFullPath%, %Textify%
         EinzigartigeNachrichten = "" ; Variable checks if a respective finding in a file or sub-file already existed. Avoids redundant reporting and allows to report if nothing is found. 
         /*
-        Counters *Attack I.A.* Dependency injection / DLL hijacking through SVG image im-port in OOXML files
+        Counters *Attack I.A.* Dependency injection / DLL hijacking through SVG image im-port in OOXML files.
         */
         /*
-        Counters *Attack II.C.* Hiding of malicious content in OOXML files  
+        Counters *Attack II.C.* Hiding of malicious content in OOXML files.
         */
         IfInString, A_LoopFileName, svg
         {
@@ -130,6 +134,33 @@ Loop, Files, %Startverzeichnis%*.*, F
                 }
             }
             gosub, NichtsGefunden
+        }
+        EinzigartigeNachrichten = ""
+        /*
+        Counters *Attack II.B. & C.* Hiding of malicious SVG references inside embedded videos in MS PowerPoint and Word.
+        */
+        If A_LoopFileName contains slide,document
+        {
+            Loop, Read, %Textify%
+            {
+                IfInString, A_LoopReadLine, webVideoPr
+                {
+                    FileAppend, `nThe presentation or document contains an embedded web video.`n, %ScriptDatei%
+                }
+                IfInString, A_LoopReadLine, xmlns:wp15="http://schemas.microsoft.com/office/ ; Print the web video url. 
+                {
+                    IfInString, A_LoopReadLine, Drawing" embeddedHtml
+                    {
+                        StringGetPos, EigentlicherLinkAnfang, A_LoopReadLine, src=&quot;, L
+                        EigentlicherLinkAnfang += 11
+                        StringGetPos, EigentlicherLinkEnde, A_LoopReadLine, &quot; frameborder, L
+                        EigentlicherLinkEnde -= %EigentlicherLinkAnfang%
+                        EigentlicherLinkEnde += 1
+                        StringMid, EigentlicherLink, A_LoopReadLine, EigentlicherLinkAnfang, EigentlicherLinkEnde
+                        FileAppend, The url is "%EigentlicherLink%".`n Make sure it is a web video location you can trust`,`n before opening the file.`n, %ScriptDatei%
+                    }
+                }
+            }
         }
         EinzigartigeNachrichten = ""
         /*
@@ -186,22 +217,7 @@ Loop, Files, %Startverzeichnis%*.*, F
         }
         EinzigartigeNachrichten = ""
         /*
-        Counters *Attack II.B. & C.* Hiding of malicious SVG references inside embeddedvideos in MS Word
-        */
-        IfInString, A_LoopFileName, document
-        {
-            Gosub, VideoSuche2
-        }
-        /*
-        Counters *Attack II.B. & C.* Hiding of malicious SVG references inside embedded videos in MS PowerPoint
-        */
-        IfInString, A_LoopFileName, slide
-        {
-            Gosub, VideoSuche2
-        }
-        EinzigartigeNachrichten = ""
-        /*
-        Analysis of Outlook, HTML, MHT, Access and OneNote files.
+        Analysis of Outlook, OneNote, HTML, MHT and binary files.
         */
         If A_LoopFileName contains %SuchlisteDateitypen2%
         {
@@ -230,11 +246,12 @@ Clipboard := ResultateSammler
 Ende:
 ExitApp
 Return
+
 /*
-Scripts related to the embedded video search inside the "document.xml" for Word and inside the "slides.xml" for MS PowerPoint.
+Subs to avoid redundant code and reduce the carbon footprint of the application. 
 */
 
-Binaerwandler: ; Change binary files to normal text files. Simple encoding read and write functions did not produce the desired results and text was only readable for the MSO file analyzer, when it was converted through the clipboard. 
+Binaerwandler: ; Change binary files to normal text files.
 Clipboard =  
 Run, Notepad "%Textify%" 
 WinActivate, ahk_class Notepad
@@ -258,7 +275,7 @@ WinWaitClose, ahk_class Notepad
 Clipboard = 
 return
 
-ScriptSuche: ; Search for script tags
+ScriptSuche: ; Search for script tags.
 IfInString, A_LoopReadLine, `<`/script`>
 {
     IfNotInString, EinzigartigeNachrichten, script
@@ -298,29 +315,6 @@ IfNotInString, EinzigartigeNachrichten, svg
     {
         FileAppend, - It contains a svg file.`n, %ScriptDatei%
         EinzigartigeNachrichten .= "svg"
-    }
-}
-return
-
-VideoSuche2: ; Search for embedded web videos. 
-Loop, Read, %Textify%
-{
-    IfInString, A_LoopReadLine, webVideoPr
-    {
-        FileAppend, `nThe document or presentation contains an embedded web video.`n, %ScriptDatei%
-    }
-    IfInString, A_LoopReadLine, xmlns:wp15="http://schemas.microsoft.com/office/ ; Print the web video url. 
-    {
-        IfInString, A_LoopReadLine, Drawing" embeddedHtml
-        {
-            StringGetPos, EigentlicherLinkAnfang, A_LoopReadLine, src=&quot;, L
-            EigentlicherLinkAnfang += 11
-            StringGetPos, EigentlicherLinkEnde, A_LoopReadLine, &quot; frameborder, L
-            EigentlicherLinkEnde -= %EigentlicherLinkAnfang%
-            EigentlicherLinkEnde += 1
-            StringMid, EigentlicherLink, A_LoopReadLine, EigentlicherLinkAnfang, EigentlicherLinkEnde
-            FileAppend, The url is "%EigentlicherLink%".`n Make sure it is a web video location you can trust`,`n before opening the file.`n, %ScriptDatei%
-        }
     }
 }
 return
@@ -438,3 +432,8 @@ CreateZipFile(sZip)
 	file.close()
 	FileEncoding, %CurrentEncoding%
 }
+
+/*
+Additional Controls.
+*/
+F8::ExitApp
